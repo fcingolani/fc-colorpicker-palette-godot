@@ -42,9 +42,11 @@ func _enter_tree():
 	
 	if gpl_file_path:
 		print("FC ColorPicker Palette: Using %s as palette file." % gpl_file_path)
-		colors = _import_gpl(gpl_file_path)
-	else:
-		colors = ProjectSettings.get_setting(colors_setting_key) as PoolColorArray
+		colors.append_array(_import_gpl(gpl_file_path))
+	
+	var manual_colors = ProjectSettings.get_setting(colors_setting_key) as PoolColorArray
+	if manual_colors:
+		colors.append_array(manual_colors)
 
 	if colors:
 		var ep = EditorPlugin.new()
