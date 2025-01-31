@@ -1,21 +1,21 @@
-tool
+@tool
 extends EditorPlugin
 
 var gpl_file_setting_key : String = "fc/colorpicker_palette/gpl_file"
 var colors_setting_key : String = "fc/colorpicker_palette/colors"
 
-var colors : PoolColorArray
+var colors : PackedColorArray
 
 func _create_colors_property():
-	ProjectSettings.set(colors_setting_key, PoolColorArray())
+	ProjectSettings.set(colors_setting_key, PackedColorArray())
 
 	var property_info = {
 		"name": colors_setting_key,
-		"type": TYPE_COLOR_ARRAY,
+		"type": TYPE_PACKED_COLOR_ARRAY,
 	}
 
 	ProjectSettings.add_property_info(property_info)
-	ProjectSettings.set_initial_value(colors_setting_key, PoolColorArray())
+	ProjectSettings.set_initial_value(colors_setting_key, PackedColorArray())
 
 func _create_gpl_file_property():
 	ProjectSettings.set(gpl_file_setting_key, '')
@@ -41,10 +41,10 @@ func _enter_tree():
 	var gpl_file_path = ProjectSettings.get_setting(gpl_file_setting_key)
 	
 	if gpl_file_path:
-		print("FC ColorPicker Palette: Using %s as palette file." % gpl_file_path)
+		#print("FC ColorPicker Palette: Using %s as palette file." % gpl_file_path)
 		colors.append_array(_import_gpl(gpl_file_path))
 	
-	var manual_colors = ProjectSettings.get_setting(colors_setting_key) as PoolColorArray
+	var manual_colors = ProjectSettings.get_setting(colors_setting_key) as PackedColorArray
 	if manual_colors:
 		colors.append_array(manual_colors)
 
@@ -55,33 +55,33 @@ func _enter_tree():
 			.set_project_metadata("color_picker", "presets", colors)
 		ep.free()
 		
-		print("FC ColorPicker Palette: Loaded %s colors as ColorPicker presets." % colors.size())
+		#print("FC ColorPicker Palette: Loaded %s colors as ColorPicker presets." % colors.size())
 
 func _exit_tree():
 	pass
 
-func _import_gpl(path : String) -> PoolColorArray:
+func _import_gpl(path : String) -> PackedColorArray:
 	var color_line_regex = RegEx.new()
 	color_line_regex.compile("(?<red>[0-9]{1,3})[ \t]+(?<green>[0-9]{1,3})[ \t]+(?<blue>[0-9]{1,3})")
 
-	var colors = PoolColorArray()
+	var colors = PackedColorArray()
 
-	var file = File.new()
-	if file.file_exists(path):
-		file.open(path, File.READ)
+	if FileAccess.file_exists(path):
+		var file = FileAccess.open(path, FileAccess.READ)
 		var text = file.get_as_text()
 		var lines = text.split('\n')
 		var line_number := 0
 		
 		for line in lines:
-			line = line.lstrip(" ")
+			#print(line)
+			line = line.strip_edges()
 
 			if line_number == 0:
 				if line != "GIMP Palette":
 					push_error("File \"%s\" is not a valid GIMP Palette." % path)
 					break
 
-			elif !line.begins_with('#') and !line.empty():
+			elif !line.begins_with('#') and !line.is_empty():
 				var matches = color_line_regex.search(line)
 				if matches:
 					var red: float = matches.get_string("red").to_float() / 255.0
